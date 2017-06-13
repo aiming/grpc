@@ -22,4 +22,5 @@ xcodebuild -workspace grpc_csharp_ext.xcworkspace \
            -scheme grpc_csharp_ext \
            -configuration $BUILD_TYPE \
            -derivedDataPath "$work_dir" \
+           OTHER_CFLAGS="-fembed-bitcode" \
            clean build
