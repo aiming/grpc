@@ -1,0 +1,38 @@
+platform :ios, '9.0'
+
+install! 'cocoapods', :deterministic_uuids => false
+
+target 'ios_grpc_ext' do
+  # Pods for ios_grpc_ext
+  pod 'gRPC-Core', :path => '../..'
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+puts "Updating #{target.name}"
+
+    # Replace GRPC_SRC_ROOT to local dir.
+    if target.name == "gRPC-Core"
+      target.build_configurations.each do |config|
+        config.build_settings['GRPC_SRC_ROOT'] = '$PROJECT_DIR/../../../'
+      end
+    end
+
+    # Add Header Search Paths.
+    if target.name == "Pods-ios_grpc_ext"
+      target.build_configurations.each do |config|
+        xcconfig_path = config.base_configuration_reference.real_path
+puts "Updating #{xcconfig_path}"
+        build_settings = Hash[*File.read(xcconfig_path).lines.map{|x| x.split(/\s*=\s*/, 2)}.flatten]
+
+        build_settings['GRPC_SRC_ROOT'] = '$PROJECT_DIR/../../'
+        build_settings['HEADER_SEARCH_PATHS'] = build_settings['HEADER_SEARCH_PATHS'].chomp << ' "${GRPC_SRC_ROOT}"'
+
+        file = File.open(xcconfig_path, "w")
+        build_settings.each do |key,value|
+           file.puts "#{key} = #{value}"
+        end
+      end
+    end
+  end
+end
